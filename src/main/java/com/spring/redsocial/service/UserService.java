@@ -10,6 +10,7 @@ import com.spring.redsocial.model.User;
 import com.spring.redsocial.repository.UserRepository;
 import com.spring.redsocial.security.JwtUtils;
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -96,11 +98,32 @@ public class UserService {
                 .build();
     }
 
-    public void upload(){
-        String location = "src/main/resources/static/files";
+    public ResponseEntity<?> upload(MultipartFile file){
+        User currentUser = this.getCurrentUser();
+        String location = "src/main/resources/static/avatars";
         FileUploadService fileUploadService = new FileUploadServiceImpl(location);
 
+        String image  = fileUploadService.almacenarArchivo(file);
+        String path = fileUploadService.cargarArchivo(image).toString();
 
+        Map<String, String> response = new HashMap<>();
+        response.put("fileName", image);
+        response.put("path", path);
+        response.put("message", "Imagen de perfil actualizada correctamente");
+
+        if( image != null ){
+            currentUser.setImage(image);
+            userRepository.save(currentUser);
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        }
+
+        return new ResponseEntity<>("Error al subir el archivo", HttpStatus.OK);
+    }
+
+    public Resource getAvatar(String nombre){
+        String location = "src/main/resources/static/avatars";
+        FileUploadService fileUploadService = new FileUploadServiceImpl(location);
+        return fileUploadService.cargarComoRecurso(nombre);
     }
 
 
@@ -129,7 +152,6 @@ public class UserService {
         return userRepository.findByEmail(authentication.getPrincipal().toString()).orElseThrow(
                 () -> new RedSocialExceptionHandler("User not found") );
     }
-
 
 
 }

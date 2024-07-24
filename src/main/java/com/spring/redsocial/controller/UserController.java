@@ -4,7 +4,10 @@ import com.spring.redsocial.dto.AuthResponse;
 import com.spring.redsocial.model.User;
 import com.spring.redsocial.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,7 +39,15 @@ public class UserController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> upload(@RequestParam("perfil") MultipartFile file){
-        return new ResponseEntity<>( file.getOriginalFilename(), HttpStatus.OK );
+        return userService.upload(file);
+    }
+
+    @GetMapping("/avatar/{file:.+}")
+    public ResponseEntity<?> getAvatar(@PathVariable String file){
+        Resource resource = userService.getAvatar(file);
+        return ResponseEntity.ok()
+            .contentType(MediaType.IMAGE_JPEG)
+            .body(resource);
     }
 
 }
