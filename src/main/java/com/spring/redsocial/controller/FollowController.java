@@ -1,9 +1,12 @@
 package com.spring.redsocial.controller;
 
+import com.spring.redsocial.model.Follow;
 import com.spring.redsocial.service.FollowService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -18,9 +21,18 @@ public class FollowController {
         return followService.follow(followed);
     }
 
-    // dejar de seeguir
-    public void unfollow(){
+    // dejar de seguir
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> unfollow(@PathVariable("id") String id ){
+        return followService.unfollow(id);
+    }
 
+    // listado de usuarios a quienes sigue
+    @GetMapping("/following")
+    public Object getFollowing(
+            @RequestParam(value = "id", required = false) String id,
+            @RequestParam(value = "page", required = false) String page ){
+        return followService.following(id, page);
     }
 
     //listado de followers
@@ -28,9 +40,5 @@ public class FollowController {
 
     }
 
-    // listado de usuarios a quien sigo
-    public void getFollowed(){
-
-    }
 
 }
