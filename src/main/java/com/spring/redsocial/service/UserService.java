@@ -6,7 +6,9 @@ import com.spring.redsocial.exception.RedSocialExceptionHandler;
 import com.spring.redsocial.file.FileUploadService;
 import com.spring.redsocial.file.FileUploadServiceImpl;
 import com.spring.redsocial.mapper.UserMapper;
+import com.spring.redsocial.model.Follow;
 import com.spring.redsocial.model.User;
+import com.spring.redsocial.repository.FollowRepository;
 import com.spring.redsocial.repository.UserRepository;
 import com.spring.redsocial.security.JwtUtils;
 import lombok.AllArgsConstructor;
@@ -33,6 +35,7 @@ public class UserService {
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
+    private final FollowRepository followRepository;
 
     public AuthResponse save(SignupRequest signupRequest){
         Map<String, String> errors = new HashMap<>();
@@ -67,13 +70,17 @@ public class UserService {
         return new ResponseEntity<>( userOptional.get(), HttpStatus.OK );
     }
 
+
     public Object all(String page){
+        User currentUser = getCurrentUser();
+
+        Map<String, Object> response = new HashMap<>();
+
         if( page != null ){
             //the index start in 0
             Pageable pageable = PageRequest.of(Integer.parseInt(page) - 1, 3);
             Page<User> users = userRepository.findAll(pageable);
 
-            Map<String, Object> response = new HashMap<>();
             response.put("totalElements", users.getTotalElements());
             response.put("totalPages", users.getTotalPages());
             response.put("currentPage", users.getNumber() + 1);
@@ -81,7 +88,23 @@ public class UserService {
             response.put("content", users.getContent());
             return response;
         }
-        return userRepository.findAll();
+
+        List<Follow> getUserFollowing = followRepository.getUserFollowingFromList(currentUser.getId());
+
+        //List<Follow> getUserFollowers = followRepository.getUserFollowers(loginId, Integer.parseInt(id));
+
+        List<Integer> userFollowing = getUserFollowing.stream()
+                .map( follow -> follow.getFollow().getId()  )
+                .toList();
+
+        /*
+        List<Integer> userFollowers = getUserFollowers.stream()
+                .map( follow -> follow.getUser().getId()  )
+                .toList();
+         */
+        response.put("content", userRepository.findAll());
+        response.put("user_following", userFollowing);
+        return response;
     }
 
     public AuthResponse update(User user){

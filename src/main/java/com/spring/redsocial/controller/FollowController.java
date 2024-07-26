@@ -36,9 +36,9 @@ public class FollowController {
     }
 
     //listado de followers
-    public void getFollowers(){
-
+    @GetMapping("/followers")
+    public List<Follow> getFollowers(@RequestParam(value = "id", required = false) String id ){
+        return followService.followers(id);
     }
-
 
 }

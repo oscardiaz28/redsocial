@@ -20,11 +20,19 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
      */
     List<Follow> getFollowing(@Param("user_id") Integer user_id);
 
+    @Query(value = "select * from follow where followed_id = :followed_id", nativeQuery = true)
+    List<Follow> getFollowers(@Param("followed_id") Integer followed_id );
+
     @Query(value = "CALL getUserFollowing(:login_id, :current_id)" , nativeQuery = true)
     List<Follow> getUserFollowing(@Param("login_id") Integer login_id, @Param("current_id") Integer current_id );
 
     @Query(value = "CALL getUserFollowers(:login_id, :current_id)" , nativeQuery = true)
     List<Follow> getUserFollowers(@Param("login_id") Integer login_id, @Param("current_id") Integer current_id );
+
+    @Query( value = "SELECT * FROM follow WHERE user_id = :login_id AND \n" +
+            "followed_id IN (SELECT followed_id FROM users)" , nativeQuery = true)
+    List<Follow> getUserFollowingFromList(@Param("login_id") Integer login_id );
+
 
 
 }

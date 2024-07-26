@@ -124,10 +124,11 @@ public class FollowService {
         return new PageImpl<>(pagedList, pageable, total);
     }
 
-    public void followers(){
-
+    public List<Follow> followers(String id){
+        User currentUser = authService.getCurrentUser();
+        if( id != null ) currentUser = userRepository.findById(Integer.valueOf(id)).orElseThrow(
+                () -> new RedSocialExceptionHandler("No se ha encontrado el usuario") ) ;
+        return followRepository.getFollowers(currentUser.getId());
     }
-
-
 
 }

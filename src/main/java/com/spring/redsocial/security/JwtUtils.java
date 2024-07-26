@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
+import java.util.Date;
 import java.util.stream.Collectors;
 
 @Component
@@ -31,6 +32,7 @@ public class JwtUtils {
                 .withIssuer(this.userGenerator)
                 .withSubject(email)
                 .withClaim("authorities", authorities)
+                .withExpiresAt(new Date(System.currentTimeMillis()+1800000))
                 .sign(algorithm);
         return jwt;
     }
