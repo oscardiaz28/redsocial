@@ -63,7 +63,7 @@ public class FollowService {
     }
 
     public Object following(String id, String page){
-        Integer defaultPage = 0;
+        Integer defaultPage = 1;
         User currentUser = authService.getCurrentUser();
         if( id != null ) {
             currentUser = userRepository.findById(Integer.valueOf(id)).orElseThrow(
@@ -72,7 +72,7 @@ public class FollowService {
         if( page != null && Integer.parseInt(page) > 0 ){
             defaultPage = Integer.parseInt(page);
         }
-        Pageable pageable = PageRequest.of(defaultPage, 10);
+        Pageable pageable = PageRequest.of(defaultPage - 1, 10);
 
         List<Follow> following = followRepository.getFollowing(currentUser.getId());
         Page<Follow> paging = getPage(following, pageable);

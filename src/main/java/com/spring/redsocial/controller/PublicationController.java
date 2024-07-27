@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/publications")
 public class PublicationController {
 
-    private PublicationService publicationService;
+    private final PublicationService publicationService;
 
     @PostMapping
     public ResponseEntity<?> save(@RequestParam("text") String texto ){
@@ -23,14 +23,26 @@ public class PublicationController {
     }
 
     @GetMapping("/{id}")
-    public void getOne(@PathVariable("id") String id ){
-
+    public ResponseEntity<?> getOne(@PathVariable("id") String id ){
+        return publicationService.getOne(id);
     }
 
-    @GetMapping
-    public void getAll(){
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> remove(@PathVariable("id") String id ){
+        return publicationService.remove(id);
     }
+
+    // get publications by user
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getByUser(@PathVariable("id") String id,
+                                       @RequestParam(value = "page", required = false) String page ){
+        return publicationService.getByUser(id, page);
+    }
+
+    // upload image
+
+
+    // FEED
 
 
 }

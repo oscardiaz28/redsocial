@@ -22,10 +22,10 @@ public class Follow {
     @JoinColumn(name = "followed_id")
     private User follow;
     @Column(columnDefinition = "TIMESTAMP")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
     @PrePersist
     protected void onCreate(){
-        created_at = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
 }

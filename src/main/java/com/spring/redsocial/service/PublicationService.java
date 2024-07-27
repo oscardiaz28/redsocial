@@ -1,15 +1,24 @@
 package com.spring.redsocial.service;
 
+import com.spring.redsocial.dto.PaginationResponse;
+import com.spring.redsocial.dto.PublicationResponse;
 import com.spring.redsocial.model.Publication;
 import com.spring.redsocial.model.User;
 import com.spring.redsocial.repository.PublicationRepository;
+import com.spring.redsocial.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import org.apache.coyote.Response;
+import org.hibernate.event.spi.PostUpdateEventListener;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -17,6 +26,7 @@ public class PublicationService {
 
     private final PublicationRepository publicationRepository;
     private final AuthService authService;
+    private final UserRepository userRepository;
 
     public ResponseEntity<?> save(String texto){
         User currentUser = authService.getCurrentUser();
@@ -32,6 +42,100 @@ public class PublicationService {
         response.put("data", publicationSaved);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    public ResponseEntity<?> getOne(String id){
+        User currentUser = authService.getCurrentUser();
+        try{
+            Optional<Publication> publication = publicationRepository.findById(Integer.parseInt(id));
+            if(publication.isEmpty()){
+                return new ResponseEntity<>("La publicación no existe", HttpStatus.BAD_REQUEST);
+            }
+
+            return new ResponseEntity<>(publication.get(), HttpStatus.OK);
+        }catch(NumberFormatException e){
+            return new ResponseEntity<>("ID de publicación inválido", HttpStatus.BAD_REQUEST);
+        }
+
+    }
+
+    public ResponseEntity<?> remove(String id){
+        User currentUser = authService.getCurrentUser();
+        try{
+            Optional<Publication> publication = publicationRepository.findById(Integer.parseInt(id));
+            if(publication.isEmpty()  ){
+                return new ResponseEntity<>("La publicación no existe", HttpStatus.BAD_REQUEST);
+            }
+            if( currentUser.getId() != publication.get().getUser().getId() )            {
+                return new ResponseEntity<>("No se ha podido eliminar la publicación", HttpStatus.BAD_REQUEST);
+            }
+            System.out.println( "Current User: " + currentUser.getId() + " " + " Publicaiont: " + publication.get().getUser().getId() );
+            publicationRepository.deleteById(Integer.parseInt(id));
+
+            return ResponseEntity.ok().build();
+
+        }catch(NumberFormatException e){
+            return new ResponseEntity<>("ID de publicación inválido", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public ResponseEntity<?> getByUser(String id, String page){
+        // TODO: COMPLETAR PAGINACION
+        Integer defaultPage = 0;
+        try{
+            Optional<User> user = userRepository.findById(Integer.parseInt(id));
+            if(user.isEmpty()) return new ResponseEntity<>("El usuario no existe", HttpStatus.BAD_REQUEST);
+
+            Sort sort = Sort.by("createdAt").descending();
+
+            List<PublicationResponse> listado = publicationRepository.findAllByUserId(Integer.parseInt(id), sort).stream()
+                    .map( publication -> map(publication)  )
+                    .toList();
+
+            if( page != null && Integer.parseInt(page) > 0 ) defaultPage = Integer.parseInt(page);
+
+            Pageable pageable = PageRequest.of(defaultPage  , 10);
+
+            Page<PublicationResponse> paging = getPage(listado, pageable);
+
+            PaginationResponse paginationResponse = PaginationResponse.builder()
+                    .totalElements(paging.getTotalElements())
+                    .totalPages(paging.getTotalPages())
+                    .currentPage( paging.getNumber() == 0 ? paging.getNumber() + 1 : paging.getNumber() )
+                    .itemsPerPage(paging.getSize())
+                    .content(paging.getContent())
+                    .build();
+
+            return new ResponseEntity<>(paginationResponse, HttpStatus.OK);
+
+        }catch (NumberFormatException e){
+            return new ResponseEntity<>("ID de usuario inválido", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+
+
+    private Page<PublicationResponse> getPage(List<PublicationResponse> listado, Pageable pageable) {
+        int pageSize = pageable.getPageSize();
+        int pageNumber = pageable.getPageNumber();
+        int offSet = pageNumber * pageSize;
+        int total = listado.size();
+        List<PublicationResponse> pagedList = listado.stream()
+                .skip(offSet)
+                .limit(pageSize)
+                .toList();
+        return new PageImpl<>(pagedList, pageable, total);
+    }
+
+    private PublicationResponse map(Publication publication){
+        return PublicationResponse.builder()
+                .userId(publication.getId())
+                .userNick(publication.getUser().getNick())
+                .image(publication.getUser().getImage())
+                .text(publication.getText())
+                .file(publication.getFile())
+                .createdAt(publication.getCreatedAt())
+                .build();
     }
 
 }

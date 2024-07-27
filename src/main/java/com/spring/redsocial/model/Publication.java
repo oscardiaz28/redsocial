@@ -21,9 +21,9 @@ public class Publication {
     private String text;
     private String file;
     @Column(columnDefinition = "TIMESTAMP")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
     @PrePersist
     private void onCreate(){
-        this.created_at = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 }

@@ -27,11 +27,11 @@ public class User {
     private Role role;
     private String image;
     @Column(columnDefinition = "TIMESTAMP")
-    private LocalDateTime created_at;
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate(){
-        created_at = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
 }
