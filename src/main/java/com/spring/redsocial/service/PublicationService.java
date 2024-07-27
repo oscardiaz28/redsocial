@@ -2,6 +2,8 @@ package com.spring.redsocial.service;
 
 import com.spring.redsocial.dto.PaginationResponse;
 import com.spring.redsocial.dto.PublicationResponse;
+import com.spring.redsocial.file.FileUploadService;
+import com.spring.redsocial.file.FileUploadServiceImpl;
 import com.spring.redsocial.model.Publication;
 import com.spring.redsocial.model.User;
 import com.spring.redsocial.repository.PublicationRepository;
@@ -13,7 +15,9 @@ import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import javax.swing.text.html.Option;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -113,6 +117,40 @@ public class PublicationService {
         }
     }
 
+    public ResponseEntity<?> upload(MultipartFile file, String id){
+        Integer publicationId = null;
+        try{
+            publicationId = Integer.parseInt(id);
+        }catch(NumberFormatException e){
+            return new ResponseEntity<>("ID de publicacion inválido", HttpStatus.BAD_REQUEST);
+        }
+        Optional<Publication> publication = publicationRepository.findById(publicationId);
+        if(publication.isEmpty()){
+            return new ResponseEntity<>("La publicación no existe", HttpStatus.BAD_REQUEST);
+        }
+
+        User currentUser = authService.getCurrentUser();
+        String location = "src/main/resources/static/publications";
+        FileUploadService fileUploadService = new FileUploadServiceImpl(location);
+
+        String image = fileUploadService.almacenarArchivo(file);
+        String path = fileUploadService.cargarArchivo(image).toString();
+
+        Map<String, String> response = new HashMap<>();
+        response.put("filename", image);
+        response.put("path", path);
+
+        Optional<Publication> existPublication = publicationRepository.findByIdAndUserId(publication.get().getId(),
+                currentUser.getId());
+
+        if( existPublication.isEmpty() || image == null ){
+            return new ResponseEntity<>("Error al subir archivo", HttpStatus.BAD_REQUEST);
+        }
+
+        publication.get().setFile(image);
+        publicationRepository.save(publication.get());
+        return new ResponseEntity<>("Archivo subido correctamente", HttpStatus.OK);
+    }
 
 
     private Page<PublicationResponse> getPage(List<PublicationResponse> listado, Pageable pageable) {

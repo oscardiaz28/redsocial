@@ -6,6 +6,7 @@ import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @AllArgsConstructor
@@ -39,10 +40,14 @@ public class PublicationController {
         return publicationService.getByUser(id, page);
     }
 
-    // upload image
-
+    // upload file
+    @PostMapping("/{id}/upload")
+    public ResponseEntity<?> uploadFile(@RequestParam("file")MultipartFile file, @PathVariable("id") String id ){
+        return publicationService.upload(file, id);
+    }
 
     // FEED
+
 
 
 }
