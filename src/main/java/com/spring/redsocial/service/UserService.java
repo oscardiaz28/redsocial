@@ -9,6 +9,7 @@ import com.spring.redsocial.mapper.UserMapper;
 import com.spring.redsocial.model.Follow;
 import com.spring.redsocial.model.User;
 import com.spring.redsocial.repository.FollowRepository;
+import com.spring.redsocial.repository.PublicationRepository;
 import com.spring.redsocial.repository.UserRepository;
 import com.spring.redsocial.security.JwtUtils;
 import lombok.AllArgsConstructor;
@@ -36,6 +37,7 @@ public class UserService {
     private final JwtUtils jwtUtils;
     private final PasswordEncoder passwordEncoder;
     private final FollowRepository followRepository;
+    private final PublicationRepository publicationRepository;
 
     public AuthResponse save(SignupRequest signupRequest){
         Map<String, String> errors = new HashMap<>();
@@ -149,6 +151,26 @@ public class UserService {
         return fileUploadService.cargarComoRecurso(nombre);
     }
 
+    public ResponseEntity<?> counter(String id){
+        User currentUser = this.getCurrentUser();
+        try{
+            if( id != null ) {
+                currentUser = userRepository.findById(Integer.parseInt(id)).orElse(null);
+            }
+        }catch(NumberFormatException e){
+            return new ResponseEntity<>("ID invalido", HttpStatus.BAD_REQUEST);
+        }
+        if( currentUser == null) return new ResponseEntity<>("El usuario no existe", HttpStatus.BAD_REQUEST);
+
+        Map<String, Object> result = new HashMap<>();
+        Long following = followRepository.countByUserId(currentUser.getId());
+        Long publications = publicationRepository.countByUserId(currentUser.getId());
+        Long followers = followRepository.countByFollowId(currentUser.getId());
+        result.put("following", following);
+        result.put("followers", followers);
+        result.put("publications", publications);
+        return new ResponseEntity<>(result, HttpStatus.OK);
+    }
 
     private User reflection(User currentUser, User userRequest){
         Field[] fields = userRequest.getClass().getDeclaredFields();

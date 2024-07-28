@@ -3,6 +3,7 @@ package com.spring.redsocial.controller;
 import com.spring.redsocial.dto.AuthResponse;
 import com.spring.redsocial.model.User;
 import com.spring.redsocial.service.UserService;
+import jakarta.websocket.server.PathParam;
 import lombok.AllArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -48,6 +49,11 @@ public class UserController {
         return ResponseEntity.ok()
             .contentType(MediaType.IMAGE_JPEG)
             .body(resource);
+    }
+
+    @GetMapping("/counter")
+    public ResponseEntity<?> counter(@RequestParam(name = "id", required = false) String id){
+        return userService.counter(id);
     }
 
 }

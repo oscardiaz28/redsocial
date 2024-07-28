@@ -4,13 +4,16 @@ import com.spring.redsocial.dto.PaginationResponse;
 import com.spring.redsocial.dto.PublicationResponse;
 import com.spring.redsocial.file.FileUploadService;
 import com.spring.redsocial.file.FileUploadServiceImpl;
+import com.spring.redsocial.model.Follow;
 import com.spring.redsocial.model.Publication;
 import com.spring.redsocial.model.User;
+import com.spring.redsocial.repository.FollowRepository;
 import com.spring.redsocial.repository.PublicationRepository;
 import com.spring.redsocial.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.Response;
 import org.hibernate.event.spi.PostUpdateEventListener;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +34,7 @@ public class PublicationService {
     private final PublicationRepository publicationRepository;
     private final AuthService authService;
     private final UserRepository userRepository;
+    private final FollowRepository followRepository;
 
     public ResponseEntity<?> save(String texto){
         User currentUser = authService.getCurrentUser();
@@ -139,6 +143,7 @@ public class PublicationService {
         Map<String, String> response = new HashMap<>();
         response.put("filename", image);
         response.put("path", path);
+        response.put("message", "Archivo subido correctamente");
 
         Optional<Publication> existPublication = publicationRepository.findByIdAndUserId(publication.get().getId(),
                 currentUser.getId());
@@ -149,9 +154,41 @@ public class PublicationService {
 
         publication.get().setFile(image);
         publicationRepository.save(publication.get());
-        return new ResponseEntity<>("Archivo subido correctamente", HttpStatus.OK);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    public Resource getFile(String file){
+        String location = "src/main/resources/static/publications";
+        FileUploadService fileService = new FileUploadServiceImpl(location);
+        return fileService.cargarComoRecurso(file);
+    }
+
+    public ResponseEntity<?> feed(String page){
+        Integer defaultPage = 0;
+        try{
+            if( page != null ) defaultPage = Integer.parseInt(page);
+            Pageable pageable = PageRequest.of(defaultPage, 10);
+            User currentUser = authService.getCurrentUser();
+
+            List<PublicationResponse> feed = publicationRepository.getFeed(currentUser.getId()).stream()
+                    .map( publication -> map(publication) )
+                    .toList();
+
+            Page<PublicationResponse> response = getPage(feed, pageable);
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("totalElements", response.getTotalElements());
+            result.put("itemsPerPage", response.getSize());
+            result.put("totalPages", response.getTotalPages());
+            result.put("currentPage", response.getNumber());
+            result.put("content", response.getContent());
+
+            return new ResponseEntity<>(result, HttpStatus.OK);
+
+        }catch(NumberFormatException e){
+            return new ResponseEntity<>("Parámetro page invalido", HttpStatus.BAD_REQUEST);
+        }
+    }
 
     private Page<PublicationResponse> getPage(List<PublicationResponse> listado, Pageable pageable) {
         int pageSize = pageable.getPageSize();
@@ -167,7 +204,8 @@ public class PublicationService {
 
     private PublicationResponse map(Publication publication){
         return PublicationResponse.builder()
-                .userId(publication.getId())
+                .publicationId(publication.getId())
+                .userId(publication.getUser().getId())
                 .userNick(publication.getUser().getNick())
                 .image(publication.getUser().getImage())
                 .text(publication.getText())
@@ -175,5 +213,6 @@ public class PublicationService {
                 .createdAt(publication.getCreatedAt())
                 .build();
     }
+
 
 }

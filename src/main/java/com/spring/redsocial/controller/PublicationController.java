@@ -3,7 +3,9 @@ package com.spring.redsocial.controller;
 import com.spring.redsocial.service.PublicationService;
 import lombok.AllArgsConstructor;
 import org.apache.coyote.Response;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,8 +48,19 @@ public class PublicationController {
         return publicationService.upload(file, id);
     }
 
-    // FEED
+    @GetMapping("/media/{file:.+}")
+    public ResponseEntity<Resource> getFile(@PathVariable("file") String file ){
+        Resource resource = publicationService.getFile(file);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_JPEG)
+                .body(resource);
+    }
 
+    // FEED
+    @GetMapping("/feed")
+    public ResponseEntity<?> feed(@RequestParam(value = "page", required = false) String page ){
+        return publicationService.feed(page);
+    }
 
 
 }

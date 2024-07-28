@@ -33,6 +33,7 @@ public interface FollowRepository extends JpaRepository<Follow, Integer> {
             "followed_id IN (SELECT followed_id FROM users)" , nativeQuery = true)
     List<Follow> getUserFollowingFromList(@Param("login_id") Integer login_id );
 
-
+    long countByUserId(Integer id);
+    long countByFollowId(Integer id);
 
 }

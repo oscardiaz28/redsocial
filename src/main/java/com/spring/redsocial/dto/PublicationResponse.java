@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @Data
 public class PublicationResponse {
+    private Integer publicationId;
     private Integer userId;
     private String userNick;
     private String image;
