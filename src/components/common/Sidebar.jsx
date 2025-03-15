@@ -4,6 +4,8 @@ import useAuth from '../../hooks/useAuth';
 import { FaLink } from "react-icons/fa6";
 import {Link} from 'react-router-dom'
 
+const backendUrl = import.meta.env.VITE_BACKEND_URL
+
 export const Sidebar = () => {
 
   const {user, counters} = useAuth()
@@ -16,7 +18,7 @@ export const Sidebar = () => {
             <img src={`/avatar-default.jpg`} alt=""
             className='rounded-full w-30 h-30 mb-2 object-cover' />
             : 
-            <img src={`http://localhost:3000/api/users/avatar/${user?.image}`} alt=""
+            <img src={`${backendUrl}/api/users/avatar/${user?.image}`} alt=""
             className='rounded-full w-30 h-30 mb-2 object-cover' />
           }
           <p className='font-bold'>{user?.name} {user?.surname}</p>
