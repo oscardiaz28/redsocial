@@ -30,15 +30,16 @@ export const AuthProvider = ({children}) => {
 
     const checkAuth = async () => {
         console.log("Se ejecuto checkAuth")
-        try{
-            const response = await clientAxios.get("/users/profile", {
-                withCredentials: true
-            })
-            getCounters()
-            setUser(response.data)
-        }catch(err){
-            setUser(null)
-        }
+        await request({
+            endpoint: "/users/profile",
+            onSuccess: (resp) => {
+                getCounters()
+                setUser(resp.data)
+            }, 
+            onFailure: () => {
+                setUser(null)
+            }
+        })
         setLoading({
             ...loading,
             ["fetch"]: false
