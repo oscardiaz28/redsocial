@@ -33,14 +33,15 @@ export const AuthProvider = ({children}) => {
         await request({
             endpoint: "/users/profile",
             onSuccess: (resp) => {
+                // console.log(resp)
                 getCounters()
-                setUser(resp.data)
+                setUser(resp)
             }, 
             onFailure: () => {
                 setUser(null)
             }
         })
-       /*
+        /*
         try{
             const response = await clientAxios.get("/users/profile", {
                 withCredentials: true
