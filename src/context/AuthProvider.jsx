@@ -30,7 +30,6 @@ export const AuthProvider = ({children}) => {
 
     const checkAuth = async () => {
         console.log("Se ejecuto checkAuth")
-        /*
         await request({
             endpoint: "/users/profile",
             onSuccess: (resp) => {
@@ -40,7 +39,8 @@ export const AuthProvider = ({children}) => {
             onFailure: () => {
                 setUser(null)
             }
-        })*/
+        })
+       /*
         try{
             const response = await clientAxios.get("/users/profile", {
                 withCredentials: true
@@ -50,6 +50,7 @@ export const AuthProvider = ({children}) => {
         }catch(err){
             setUser(null)
         }
+            */
         setLoading({
             ...loading,
             ["fetch"]: false
